@@ -1,0 +1,196 @@
+---
+title: "Vamos_Reviewer_Responses"
+output: html_document
+date: "2024-04-25"
+---
+<style>
+  body, table {
+    font-family: Arial, sans-serif;
+  }
+  .kable-table th, .kable-table td {
+    border-right: 1px solid #ddd;
+  }
+  .kable-table th:last-child, .kable-table td:last-child {
+    border-right: none;
+  }
+</style>
+```{r setup, include=FALSE}
+
+
+
+library(tidyverse)
+library(purrr)
+library(lme4)
+library(MuMIn)
+
+
+combined_means <- read.csv("/Users/cheywakeland-hart/Desktop/daria/combined_means.csv")
+affective<- read.csv("/Users/cheywakeland-hart/Desktop/daria/affective.csv")
+means_scores <- read.csv("/Users/cheywakeland-hart/Desktop/daria/means_scores.csv")
+```
+
+
+```{r }
+
+combined_means_scaled <- data_frame(img=character(906),meanv=numeric(906),meanar=numeric(906),cr=numeric(906))
+combined_means_scaled$img <- combined_means$img
+combined_means_scaled$zscorv <- scale(combined_means$Mean_Valence, center = TRUE, scale = TRUE)
+combined_means_scaled$zscorar <- scale(combined_means$Mean_Arousal, center = TRUE, scale = TRUE)
+combined_means_scaled$cr <- combined_means$cr
+combined_means_scaled <- combined_means_scaled%>%
+  drop_na()
+combined_means_scaled$zscorv <- as.numeric(combined_means_scaled$zscorv)
+combined_means_scaled$zscorar <- as.numeric(combined_means_scaled$zscorar)
+combined_means_scaled <- merge(combined_means_scaled,combined_means)
+
+a1 <- data.frame(zeroes=numeric(length(combined_means_scaled$cr)))
+combined_means_scaled <- cbind(combined_means_scaled,a1)
+#additive model
+regression_joint4 <- glm(cr ~ I(zscorv^2)+zscorv+zscorar+I(zscorar^2), data=combined_means_scaled)
+summary(regression_joint4)
+#model rsquared
+with(summary(regression_joint4), 1 - deviance/null.deviance)
+AIC(regression_joint4)
+
+regression_joint3 <- glm(cr ~ zscorv+zscorar, data=combined_means_scaled)
+summary(regression_joint3)
+
+
+
+```
+
+```{r }
+
+affective_valence <- affective %>%
+  select(Participant.Private.ID,img,Response,Screen.Name,Zone.Type,)%>%
+  filter(Screen.Name== "Screen 1" & Zone.Type=="response_slider_endValue")%>%
+  select(1:3)
+affective_arousal <- affective %>%
+  select(Participant.Private.ID,img,Response,Screen.Name,Zone.Type,)%>%
+  filter(Screen.Name== "Screen 2" & Zone.Type=="response_slider_endValue")%>%
+  select(1:3)
+
+combined_mem <- merge(affective_valence,affective_arousal, by=c("img","Participant.Private.ID"))
+combined_mem <- inner_join(memorability2,combined_mem, by="img")
+combined_mem <- combined_mem%>%
+  select(img,cr,Participant.Private.ID,Response.x,Response.y)%>%
+ rename(Valence = Response.x,Arousal = Response.y,Participant= Participant.Private.ID)
+combined_mem$Participant <- factor(combined_mem$Participant)
+combined_mem$Valence <- as.numeric(combined_mem$Valence)
+combined_mem$Arousal <- as.numeric(combined_mem$Arousal)
+
+
+combined_mem <- combined_mem %>%
+  group_by(Participant) %>%
+  mutate(
+    Valence_z = scale(Valence, center = TRUE, scale = TRUE),
+    Arousal_z = scale(Arousal, center = TRUE, scale = TRUE)) %>%
+  ungroup()%>%
+  rename(Valence_z = `Valence_z`,
+         Arousal_z = `Arousal_z`)
+
+#write.csv(combined_mem,"combined_mem.csv")
+
+
+combined_mem <- na.omit(combined_mem)
+
+
+within_sub_model2 <- lmer(cr ~ I(Valence_z^2) + Valence_z + Arousal_z + I(Arousal_z^2)+ (1|Participant), 
+                          data = combined_mem)
+
+
+summary(within_sub_model1)
+
+
+r_squared_values <- r.squaredGLMM(within_sub_model2)
+r_squared_values5 <- r.squaredGLMM(within_sub_model4)
+R2m_within_sub_model2 <- as.numeric(r_squared_values[1,1])
+print(R2m_within_sub_model2)
+
+R2m_within_sub_model4 <- as.numeric(r_squared_values5[1,1])
+print(R2m_within_sub_model4)
+
+
+```
+
+
+
+```{r }
+
+combined_means_scaled2 <- combined_means_scaled%>%
+  rename(Imorder = img)
+mem_predict <- merge(memorability,combined_means_scaled2,by="Imorder")%>%
+  select(Imorder,name,perf,zscorar,zscorv)%>%
+  filter(perf=='HIT'|perf=='MISS')%>%
+  mutate(remembered=ifelse(mem_predict$perf=='HIT',1,0))
+mem_predict$zscorar <- as.numeric(mem_predict$zscorar)
+mem_predict$zscorv <- as.numeric(mem_predict$zscorv)
+#write_csv(mem_predict,"mem_predict.csv")
+
+within_sub_model4 <- glmer(remembered ~ I(zscorv^2) + zscorv + I(zscorar^2) + zscorar + (1 | name), 
+                          data = mem_predict, 
+                          family = binomial(link = "logit"))
+summary(within_sub_model4)
+
+null_model <- glmer(remembered ~ 1 + (1 | name), 
+                    data = mem_predict, 
+                    family = binomial(link = "logit"))
+
+logLik_within_sub_model4 <- logLik(within_sub_model4)
+logLik_null_model <- logLik(null_model)
+mcfadden_r2 <- 1 - as.numeric(logLik_within_sub_model4 / logLik_null_model)
+print(mcfadden_r2)
+
+
+```
+
+
+```{r}
+
+contrast_matrix <- c(-1,1)
+means_scores$`man/natural` <- factor(means_scores$`man/natural`)
+means_scores$`out/in` <- factor(means_scores$`out/in`)
+
+man_mem <- glm(Memorability_Score ~ `man/natural`, data=means_scores,contrasts = list(`man/natural` = contrast_matrix))
+
+man_val <- glm(Mean_Valence ~ `man/natural`, data=means_scores,contrasts = list(`man/natural` = contrast_matrix))
+
+man_ar <- glm(Mean_Arousal ~ `man/natural`, data=means_scores,contrasts = list(`man/natural` = contrast_matrix))
+
+
+
+# regression model with effect coding
+outdoor_mem <- glm(Memorability_Score ~ `out/in`, 
+               data = means_scores[means_scores$`man/natural` == "Manmade",],
+               contrasts = list(`out/in` = contrast_matrix))
+summary(outdoor_mem)
+outdoor_val <- glm(Mean_Valence ~ `out/in`, 
+               data = means_scores[means_scores$`man/natural` == "Manmade",],
+               contrasts = list(`out/in` = contrast_matrix))
+summary(outdoor_val)
+outdoor_ar <- glm(Mean_Arousal ~ `out/in`, 
+               data = means_scores[means_scores$`man/natural` == "Manmade",],
+               contrasts = list(`out/in` = contrast_matrix))
+summary(outdoor_ar)
+
+
+
+outman_mem <- glm(Memorability_Score ~ `man/natural`, 
+               data = means_scores[means_scores$`out/in` == "Outdoor",],
+               contrasts = list(`man/natural` = contrast_matrix))
+summary(outman_mem)
+outman_val <- glm(Mean_Valence ~ `man/natural`, 
+               data = means_scores[means_scores$`out/in` == "Outdoor",],
+               contrasts = list(`man/natural` = contrast_matrix))
+summary(outman_val)
+outman_ar <- glm(Mean_Arousal ~ `man/natural`, 
+               data = means_scores[means_scores$`out/in` == "Outdoor",],
+               contrasts = list(`man/natural` = contrast_matrix))
+summary(outman_ar)
+
+```
+
+
+
+
+
