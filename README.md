@@ -3,7 +3,7 @@ This page is a resource hub containing the materials described in Wakeland-Hart 
 
 Please note that the VAMOS memorability & affect scores are standardized across sets 1 & 2. Both sets should be used for these scores to be valid.
 
-VAMOS Set 1 containing images modified from OASIS1, Places2, and COMPASS3 can be requested here. You will also receive access to memorability, valence, and arousal scores for these images.
+VAMOS Set 1 containing images modified from OASIS1, Places2, and COMPASS3 can be requested [here](https://forms.gle/C3uL5UnpMazZky1XA). You will also receive access to memorability, valence, and arousal scores for these images.
 
 VAMOS Set 2 containing images modified from NAPS4 can be requested here. Request access to the ‘NAPS memorability’ folder to obtain the stimuli used in this project and the associated memorability, valence, and arousal scores.
 
