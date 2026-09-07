@@ -5,7 +5,8 @@ Please note that the VAMOS memorability & affect scores are standardized across 
 
 VAMOS Set 1 containing images modified from OASIS1, Places2, and COMPASS3 can be requested [here](https://forms.gle/C3uL5UnpMazZky1XA). You will also receive access to memorability, valence, and arousal scores for these images.
 
-VAMOS Set 2 containing images modified from NAPS4 can be requested here. Request access to the ‘NAPS memorability’ folder to obtain the stimuli used in this project and the associated memorability, valence, and arousal scores.
+VAMOS Set 2 containing images modified from NAPS4 can be requested [here](https://exp.lobi.nencki.gov.pl/dnaps__;!!BDUfV1Et5lrpZQ!QEL_TUpynOY9bzy9zr_HaOIGTqb7pWauiEAkL626hOUA3w9pY9ehPdjpglixL6UbQhAyLH2YpfsM9spKD_tDucXvXcg$
+). Request access to the ‘NAPS memorability’ folder to obtain the stimuli used in this project and the associated memorability, valence, and arousal scores.
 
 Kurdi, B., Lozano, S., & Banaji, M. R. (2017). Introducing the Open Affective Standardized Image Set (OASIS). Behavior Research Methods, 49(2), 457–470. https://doi.org/10.3758/s13428-016-0715-3
 
